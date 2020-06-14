@@ -28,7 +28,7 @@ int main()
 {
 	// XInitThreads();
 	srand(time(0));
-	sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH,WINDOW_HEIGHT), "Moving Circle");
+	sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH,WINDOW_HEIGHT), "Bounce Ball");
 	//	Those lines are neccessary to avoid issues.
 	window.setFramerateLimit(TIME_FRAME + 1);
 	window.setActive(false);
@@ -41,8 +41,9 @@ int main()
 
 	//	Main Object on the screen (centered inside the play area)
 	Object shape(shapeType::CIRCLE, sf::Color::Red, move_x, move_y);
-	shape.setPositionCentered(play_area);
-	shape.isMoving(true);
+	shape.setPositionCenteredOn(play_area);
+	shape.status(state::MOVING);
+	Object * activated_shape = nullptr;
 
 	//	TODO : This line is for future uses (it may be taken out)
 	sf::Rect<float> screen(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -78,12 +79,31 @@ int main()
 
 	window.setActive(true);
 
-	bool hasMouseBeenClicked = false;
+	bool hasActivationBeenClicked = false;
+	bool isActivationButtonHeldDown = false;
+	bool hasActivationBeenReleased = false;
 	sf::Vector2i mousePosition;
 
 	//	Main loop starts here
 	while (window.isOpen())
 	{
+
+		//	Get the appropriate delta time to use for movement.
+		sf::Time dt = clock.restart();
+
+		//	FPS checking and outputing
+		int framerate = fps.getFPS();
+		if(framerate != -1)
+		{
+			fps_message.setString(std::to_string(framerate));
+		}
+
+		//	Checks if the window is focused. If not make it so that the game is paused.
+		if(!window.hasFocus())
+		{
+			continue;
+		}
+
 		//	Check for user input here
 		//	TODO : create a release key functionality for mouse button later.
 		sf::Event event;
@@ -104,58 +124,78 @@ int main()
 			{
 				if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
 				{
-					hasMouseBeenClicked = true;
-					mousePosition = sf::Mouse::getPosition(window);
-					std::cout << "the mouse is currently at ( " << mousePosition.x << ", " << mousePosition.y << " )\n";
+					if(!isActivationButtonHeldDown)
+					{
+						hasActivationBeenClicked = true;
+						isActivationButtonHeldDown = true;
+						mousePosition = sf::Mouse::getPosition(window);
+						std::cout << "the mouse is currently at ( " << mousePosition.x << ", " << mousePosition.y << " )\n";
+
+						//	TODO -- here is where i will choose which shape the mouse clicke on when there ar eseveral
+						if(shape.intersects(mousePosition))
+						{
+							activated_shape = &shape;
+						}
+
+					}
 				}
+			}
+			//	This if statement is the same as "is button released"
+			if(event.type == sf::Event::MouseButtonReleased && isActivationButtonHeldDown)
+			{
+				isActivationButtonHeldDown = false;
+				hasActivationBeenReleased = true;
+				mousePosition = sf::Mouse::getPosition(window);
+				std::cout << "Mouse released!\n";
 			}
 		}
 
-		//	TODO : add an if statement to check if window has focus.
+
 
 		// if mouse button is clicked, check where the mouse clicked.
-		if(hasMouseBeenClicked)
+		if(activated_shape != nullptr)
 		{
-			hasMouseBeenClicked = false;
-
-			if(shape.intersects(mousePosition))
+			if(isActivationButtonHeldDown)
 			{
-				if(shape.isMoving() == true)
+				if(activated_shape->isMoving() && hasActivationBeenClicked)
 				{
-					shape.move_x(0);
-					shape.move_y(0);
-					shape.isMoving(false);
+					activated_shape->stop();
+					activated_shape = nullptr;
 				}
-				else
+				else if(activated_shape->isNotMoving() && hasActivationBeenClicked)
 				{
-					shape.move_x(100);
-					shape.move_y(100);
-					shape.isMoving(true);
+					activated_shape->status(state::BEING_MOVED);
+					activated_shape->getShape()->setFillColor(sf::Color::Green);
+				}
+				hasActivationBeenClicked = false;
+			}
+			if(hasActivationBeenReleased)
+			{
+				if(activated_shape->beingMoved())
+				{
+					sf::Vector2f pos = activated_shape->getCenterPosition();
+					int movement_x = pos.x - mousePosition.x;
+					int movement_y = pos.y - mousePosition.y;
+					movement_x = (1.5f * movement_x * MAX_MOVE) / WINDOW_WIDTH;
+					movement_y = (1.5f * movement_y * MAX_MOVE) / WINDOW_HEIGHT;
+					activated_shape->start(movement_x, movement_y);
+					activated_shape = nullptr;
 				}
 
+				hasActivationBeenReleased = false;
 			}
-			//	TODO : 	Check if mousePosition is inside the rectangle of the shape.
-			//			if so then the shape movement is changed to zero.
-			//			The is moving variable is set to false.
-			//	EXTRA : It may be a good idea to see whether or not the ball is moving.
-			//			if it is moving stop it,
-			//			otherwise make it move using a hold and release mechanism
+		}
+		else
+		{
+			isActivationButtonHeldDown = false;
+			hasActivationBeenClicked = false;
+			hasActivationBeenReleased = false;
 		}
 
 		window.clear();
 
-		//	Get the appropriate delta time to use for movement.
-		sf::Time dt = clock.restart();
-
 		//	Use move function from the object's class to move around in a play area
 		shape.move(play_area, dt);
-
-		//	FPS checking and outputing
-		int framerate = fps.getFPS();
-		if(framerate != -1)
-		{
-			fps_message.setString(std::to_string(framerate));
-		}
 
 		drawText(window, fps_message);
 		drawText(window, number_message);

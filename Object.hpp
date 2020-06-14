@@ -1,19 +1,6 @@
 
 #include <SFML/Graphics.hpp>
-
-struct Window_Area
-{
-    int PLAY_AREA_TOP;
-    int PLAY_AREA_LEFT;
-    int PLAY_AREA_RIGHT;
-    int PLAY_AREA_BOTTOM;
-
-    Window_Area(int top, int left, int right, int bottom)
-    : PLAY_AREA_TOP(top), PLAY_AREA_LEFT(left), PLAY_AREA_RIGHT(right),
-    PLAY_AREA_BOTTOM(bottom) { }
-};
-
-enum class shapeType { CIRCLE, CONVEX, RECTANGLE};
+#include "Utilities.hpp"
 
 class Object
 {
@@ -21,16 +8,19 @@ private:
     sf::Shape * m_shape;
     float m_move_x;
     float m_move_y;
-    bool m_isMoving;
+    // bool m_isMoving;
     shapeType m_shape_type;
 
     int hor_dir;
     int ver_dir;
 
+    // bool m_being_moved;
+
+    state m_status;
 
 public:
     Object(shapeType type, sf::Color color, float x_mov, float y_mov)
-    : m_move_x(x_mov), m_move_y(y_mov), m_isMoving(false), m_shape_type(type),
+    : m_move_x(x_mov), m_move_y(y_mov), m_status(state::NOT_MOVING), m_shape_type(type),
     hor_dir(1), ver_dir(1)
     {
         if(type == shapeType::CIRCLE)
@@ -55,13 +45,22 @@ public:
 
     void move_x(const float new_move_x) { m_move_x = new_move_x; }
     void move_y(const float new_move_y) { m_move_y = new_move_y; }
-    void isMoving(const bool move) { m_isMoving = move; }
-    bool isMoving() const { return m_isMoving; }
+    bool isMoving() const { return m_status == state::MOVING; }
+    bool isNotMoving() const { return m_status == state::NOT_MOVING; }
+    bool beingMoved() const { return m_status == state::BEING_MOVED; }
+    bool justStopped() const { return m_status == state::STOPPED; }
+    void status(state new_state) { m_status = new_state; }
     float move_x() const { return m_move_x; }
     float move_y() const { return m_move_y; }
     sf::Shape * getShape() const { return m_shape; }
 
-    void setPositionCentered(Window_Area & play_area)
+    sf::Vector2f getCenterPosition() const
+    {
+        sf::Rect<float> rect = m_shape->getGlobalBounds();
+        return sf::Vector2f((rect.left + rect.width / 2.0f), (rect.top + rect.height / 2.0f));
+    }
+
+    void setPositionCenteredOn(Window_Area & play_area)
     {
         m_shape->setPosition(
             (play_area.PLAY_AREA_RIGHT - play_area.PLAY_AREA_LEFT) / 2.0f,
@@ -92,6 +91,25 @@ public:
         distY *= ver_dir;
 
         m_shape->move(distX, distY);
+
+    }
+
+    void stop(sf::Color color = sf::Color::Blue)
+    {
+        m_move_x = 0;
+        m_move_y = 0;
+        m_status = state::NOT_MOVING;
+        m_shape->setFillColor(color);
+    }
+
+    void start(int move_x, int move_y, sf::Color color = sf::Color::Red)
+    {
+        m_move_x = move_x;
+        m_move_y = move_y;
+        ver_dir = 1;
+        hor_dir = 1;
+        m_status = state::MOVING;
+        m_shape->setFillColor(color);
     }
 
     void draw(sf::RenderWindow & window)

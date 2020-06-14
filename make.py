@@ -3,9 +3,11 @@
 #           MAKE PYTHON PROGRAM FOR COMPILING C++ CODE                  #####
 #############################################################################
 import os
+import sys
 
 #   FOR DEBUGGING ONLY
-def log(output, debug = False):
+debug = False
+def log(output):
     if(debug):
         print(output)
 
@@ -16,11 +18,17 @@ def get_exclusion_list():
 #   Look through each folder and get .cpp file names in a list
 #   This function should return a list of all source files
 def get_all_source_files(root = '.'):
-    print('Looking for source files...')
+
+    if root != '.':
+        print('Looking for source files in ' + root + '...')
+    else:
+        print('Looking for source files in the root folder...')
+
     directories = os.listdir(root)
 
-    for i in range(len(directories)):
-        directories[i] = root + '/' + directories[i]
+    log(directories)
+
+    directories = [root + '/' + file for file in directories if file[0] != '.']
 
     source_files = []
 
@@ -34,7 +42,18 @@ def get_all_source_files(root = '.'):
     return source_files
 
 def main():
-    print("Begin make!")
+    global debug
+    if len(sys.argv) == 1:
+        print("Begin make!")
+    elif len(sys.argv) == 2 and sys.argv[1] == '-d':
+        print("Running in debug mode.")
+        debug = True
+    else:
+        print('Usage: ./make.py')
+        print('usage: ./make.py -d')
+        exit(-1)
+
+
     success = True
 
     sources = get_all_source_files('.')

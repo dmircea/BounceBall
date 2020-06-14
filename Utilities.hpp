@@ -1,4 +1,4 @@
-
+#pragma once
 
 struct Window_Area
 {

@@ -1,3 +1,4 @@
+#pragma once
 
 #include <SFML/Graphics.hpp>
 #include "Utilities.hpp"
@@ -60,7 +61,7 @@ public:
         return sf::Vector2f((rect.left + rect.width / 2.0f), (rect.top + rect.height / 2.0f));
     }
 
-    void setPositionCenteredOn(Window_Area & play_area)
+    void setPositionCenteredOn(const Window_Area & play_area)
     {
         m_shape->setPosition(
             (play_area.PLAY_AREA_RIGHT - play_area.PLAY_AREA_LEFT) / 2.0f,

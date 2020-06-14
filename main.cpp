@@ -7,6 +7,7 @@
 
 #include "FPSCounter.hpp"
 #include "Object.hpp"
+#include "ObjectContainer.hpp"
 
 //	Constants for Movement
 const float MIN_MOVE = 100;
@@ -131,7 +132,7 @@ int main()
 						mousePosition = sf::Mouse::getPosition(window);
 						std::cout << "the mouse is currently at ( " << mousePosition.x << ", " << mousePosition.y << " )\n";
 
-						//	TODO -- here is where i will choose which shape the mouse clicke on when there ar eseveral
+						//	TODO -- here is where i will choose which shape the mouse clicke on when there are several
 						if(shape.intersects(mousePosition))
 						{
 							activated_shape = &shape;

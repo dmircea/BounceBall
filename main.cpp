@@ -5,6 +5,7 @@
 
 #include <iostream>
 
+#include "Utilities.hpp"
 #include "FPSCounter.hpp"
 #include "Object.hpp"
 #include "ObjectContainer.hpp"
@@ -19,6 +20,9 @@ const int TIME_FRAME = 60;
 //	Constants for the width and height of the actual window.
 const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 700;
+//56
+const int OBJECT_SIZE = 50;
+const int MAXIMUM_OBJECTS = (WINDOW_WIDTH * WINDOW_HEIGHT) / (2 * OBJECT_SIZE * 2 * OBJECT_SIZE) - 6;
 
 //	Function signatures
 void setUpText(sf::Text & text, const sf::Vector2f & position, bool centered = false);
@@ -37,13 +41,25 @@ int main()
 	Window_Area play_area(50, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	//	Variables that deal with the speed of the shape (initialized as random)
-	float move_x = rand() / (RAND_MAX / (MAX_MOVE - MIN_MOVE)) + MIN_MOVE;
-	float move_y = rand() / (RAND_MAX / (MAX_MOVE - MIN_MOVE)) + MIN_MOVE;
+	float move_x = getRandomFloat(MIN_MOVE, MAX_MOVE);
+	float move_y = getRandomFloat(MIN_MOVE, MAX_MOVE);
 
 	//	Main Object on the screen (centered inside the play area)
-	Object shape(shapeType::CIRCLE, sf::Color::Red, move_x, move_y);
+	Object shape(shapeType::CIRCLE, sf::Color::Red, move_x, move_y, OBJECT_SIZE);
 	shape.setPositionCenteredOn(play_area);
 	shape.status(state::MOVING);
+
+	shape.print();
+
+	std::cout << "Before creating container\n";
+
+	//	Create an object container that takes care of all objects!
+	ObjectContainer circles(MAXIMUM_OBJECTS);
+
+	std::cout << "After creating container\n";
+
+	circles.print_all();
+
 	Object * activated_shape = nullptr;
 
 	//	TODO : This line is for future uses (it may be taken out)
@@ -63,20 +79,49 @@ int main()
 	sf::Text fps_message;
 	sf::Text number_message;
 
+	sf::RectangleShape add_button_outline;
+	sf::Text add_button;
+
+	sf::RectangleShape remove_button_outline;
+	sf::Text remove_button;
+
 	fps_message.setFont(font);
 	number_message.setFont(font);
+	add_button.setFont(font);
+	remove_button.setFont(font);
 
 	fps_message.setString("FPS");
 	number_message.setString("Number of balls: 1");
+	add_button.setString("Add Circle!");
+	remove_button.setString("Remove Random Circle!");
 
 	fps_message.setCharacterSize(15);
 	number_message.setCharacterSize(15);
+	add_button.setCharacterSize(15);
+	remove_button.setCharacterSize(15);
 
 	fps_message.setFillColor(sf::Color::White);
 	number_message.setFillColor(sf::Color::White);
+	add_button.setFillColor(sf::Color::White);
+	remove_button.setFillColor(sf::Color::White);
 
 	setUpText(fps_message, sf::Vector2f(WINDOW_WIDTH - 50, 10));
 	setUpText(number_message, sf::Vector2f(10, 10));
+	setUpText(add_button, sf::Vector2f(number_message.getGlobalBounds().left + number_message.getGlobalBounds().width + 30, 10));
+	setUpText(remove_button, sf::Vector2f(add_button.getGlobalBounds().left + add_button.getGlobalBounds().width + 30, 10));
+
+	//	Set up the buttons to look like buttons by changing the shape outline
+	add_button_outline.setPosition(add_button.getPosition());
+	add_button_outline.setSize(sf::Vector2f(add_button.getGlobalBounds().width + 5, add_button.getGlobalBounds().height + 10));
+	add_button_outline.setOutlineColor(sf::Color::White);
+	add_button_outline.setFillColor(sf::Color::Black);
+	add_button_outline.setOutlineThickness(1);
+
+	remove_button_outline.setPosition(remove_button.getPosition());
+	remove_button_outline.setSize(sf::Vector2f(remove_button.getGlobalBounds().width + 5, remove_button.getGlobalBounds().height + 10));
+	remove_button_outline.setOutlineColor(sf::Color::White);
+	remove_button_outline.setFillColor(sf::Color::Black);
+	remove_button_outline.setOutlineThickness(1);
 
 	window.setActive(true);
 
@@ -132,10 +177,21 @@ int main()
 						mousePosition = sf::Mouse::getPosition(window);
 						std::cout << "the mouse is currently at ( " << mousePosition.x << ", " << mousePosition.y << " )\n";
 
-						//	TODO -- here is where i will choose which shape the mouse clicke on when there are several
-						if(shape.intersects(mousePosition))
+						if(add_button_outline.getGlobalBounds().contains(sf::Vector2f(mousePosition)))
 						{
-							activated_shape = &shape;
+							activated_shape = nullptr;
+							shape.move_x(getRandomFloat(MIN_MOVE, MAX_MOVE));
+							shape.move_y(getRandomFloat(MIN_MOVE, MAX_MOVE));
+							circles.add(shape);
+						}
+						if(remove_button_outline.getGlobalBounds().contains(sf::Vector2f(mousePosition)))
+						{
+							activated_shape = nullptr;
+							circles.pop_random();
+						}
+						else
+						{
+							activated_shape = circles.intersects(mousePosition);
 						}
 
 					}
@@ -193,16 +249,24 @@ int main()
 			hasActivationBeenReleased = false;
 		}
 
+		number_message.setString("Number of balls: " + std::to_string(circles.size()));
+
 		window.clear();
 
 		//	Use move function from the object's class to move around in a play area
-		shape.move(play_area, dt);
+		circles.move_all(play_area, dt);
 
 		drawText(window, fps_message);
 		drawText(window, number_message);
+		window.draw(add_button_outline);
+		drawText(window, add_button);
+		window.draw(remove_button_outline);
+		drawText(window, remove_button);
 
-		shape.draw(window);
+		circles.draw_all(window);
+		std::cout << "After the draw all function\n";
 		window.display();
+		std::cout << "After the display of all drawn graphics\n";
 
 	}
 

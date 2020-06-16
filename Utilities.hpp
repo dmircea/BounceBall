@@ -1,5 +1,7 @@
 #pragma once
 
+#include <random>
+
 struct Window_Area
 {
     int PLAY_AREA_TOP;
@@ -12,6 +14,23 @@ struct Window_Area
     PLAY_AREA_BOTTOM(bottom) { }
 };
 
+const float EPSILON = 0.001f;
+
 enum class shapeType { CIRCLE, CONVEX, RECTANGLE};
 
 enum class state { MOVING, NOT_MOVING, STOPPED, BEING_MOVED };
+
+int getRandomInteger(int min, int max)
+{
+    return (rand() % (max - min)) + min;
+}
+
+float getRandomFloat(float min, float max)
+{
+    return rand() / (RAND_MAX / (max - min)) + min;
+}
+
+double getRandomDouble(double min, double max)
+{
+    return rand() / (RAND_MAX / (max - min)) + min;
+}

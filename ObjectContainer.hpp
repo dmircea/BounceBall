@@ -8,10 +8,17 @@ class ObjectContainer
 {
 private:
     std::vector<Object> all;
+    int m_maximum;
+    //  TODO -- all.size stays the same even after using pop or erase
+    //  Must create a private member variable to define the size of the container
 
 public:
-    ObjectContainer() {}
+    ObjectContainer() : ObjectContainer(30) {}
+    ObjectContainer(int max) : m_maximum(max) {}
     ~ObjectContainer() {}
+
+    int maximum() const { return m_maximum; }
+    int size() const { return all.size(); }
 
     void add(shapeType type, sf::Color color, float x_mov, float y_mov, const sf::Vector2f & pos)
     {
@@ -29,17 +36,37 @@ public:
 
     void add(Object newObject)
     {
-        all.push_back(newObject);
+        if(all.size() < m_maximum)
+        {
+            all.push_back(newObject);
+        }
     }
 
     void pop_last()
     {
-        all.pop_back();
+        if(all.size() > 0)
+        {
+            all.pop_back();
+        }
     }
 
     void pop_first()
     {
-        all.erase(all.begin());
+        if(all.size() > 0)
+        {
+            all.erase(all.begin());
+        }
+    }
+
+    void pop_random()
+    {
+        if(all.size() > 0)
+        {
+            std::cout << "Inside the remove random function\n";
+            int index = getRandomInteger(0, all.size());
+            all.erase(all.begin() + index);
+            std::cout << "After the remove random function\n";
+        }
     }
 
     //  Check all objects. For the first intersection that happens, a reference to the object is returned.
@@ -54,5 +81,34 @@ public:
             }
         }
         return nullptr;
+    }
+
+    void draw_all(sf::RenderWindow & window)
+    {
+        std::cout << "Inside the draw all function\n";
+        std::cout << "Number of elements: " << all.size() << '\n';
+        for (int i = 0; i < all.size(); ++i)
+        {
+            std::cout << "Drawing number " << i << '\n';
+            all[i].draw(window);
+        }
+    }
+
+    void move_all(const Window_Area &play_area, const sf::Time & dt)
+    {
+        std::cout << "Inside the move all function\n";
+        for (int i = 0; i < all.size(); ++i)
+        {
+            all[i].move(play_area, dt);
+        }
+    }
+
+    void print_all()
+    {
+        for (int i = 0; i < all.size(); ++i)
+        {
+            all[i].print();
+            std::cout << '\n';
+        }
     }
 };

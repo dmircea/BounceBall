@@ -11,19 +11,20 @@ private:
     int m_maximum;
     //  TODO -- all.size stays the same even after using pop or erase
     //  Must create a private member variable to define the size of the container
+    int m_current_size;
 
 public:
     ObjectContainer() : ObjectContainer(30) {}
-    ObjectContainer(int max) : m_maximum(max) {}
+    ObjectContainer(int max) : m_maximum(max), m_current_size(0) {}
     ~ObjectContainer() {}
 
     int maximum() const { return m_maximum; }
-    int size() const { return all.size(); }
+    int size() const { return m_current_size; }
 
     void add(shapeType type, sf::Color color, float x_mov, float y_mov, const sf::Vector2f & pos)
     {
         Object temp(type, color, x_mov, y_mov);
-        temp.getShape()->setPosition(pos);
+        temp.setPosition(pos);
         add(temp);
     }
 
@@ -36,36 +37,40 @@ public:
 
     void add(Object newObject)
     {
-        if(all.size() < m_maximum)
+        if(m_current_size < m_maximum)
         {
             all.push_back(newObject);
+            m_current_size++;
         }
     }
 
     void pop_last()
     {
-        if(all.size() > 0)
+        if(m_current_size > 0)
         {
             all.pop_back();
+            m_current_size--;
         }
     }
 
     void pop_first()
     {
-        if(all.size() > 0)
+        if(m_current_size > 0)
         {
             all.erase(all.begin());
+            m_current_size--;
         }
     }
 
     void pop_random()
     {
-        if(all.size() > 0)
+        if(m_current_size > 0)
         {
             std::cout << "Inside the remove random function\n";
-            int index = getRandomInteger(0, all.size());
+            int index = getRandomInteger(0, m_current_size);
             all.erase(all.begin() + index);
             std::cout << "After the remove random function\n";
+            m_current_size--;
         }
     }
 
@@ -73,7 +78,7 @@ public:
     //  If no intersection happens, then nullptr.
     Object * intersects(sf::Vector2i point)
     {
-        for (int i = 0; i < all.size(); ++i)
+        for (int i = 0; i < m_current_size; ++i)
         {
             if (all[i].intersects(point))
             {
@@ -86,8 +91,8 @@ public:
     void draw_all(sf::RenderWindow & window)
     {
         std::cout << "Inside the draw all function\n";
-        std::cout << "Number of elements: " << all.size() << '\n';
-        for (int i = 0; i < all.size(); ++i)
+        std::cout << "Number of elements: " << m_current_size << '\n';
+        for (int i = 0; i < m_current_size; ++i)
         {
             std::cout << "Drawing number " << i << '\n';
             all[i].draw(window);
@@ -97,7 +102,7 @@ public:
     void move_all(const Window_Area &play_area, const sf::Time & dt)
     {
         std::cout << "Inside the move all function\n";
-        for (int i = 0; i < all.size(); ++i)
+        for (int i = 0; i < m_current_size; ++i)
         {
             all[i].move(play_area, dt);
         }
@@ -105,7 +110,7 @@ public:
 
     void print_all()
     {
-        for (int i = 0; i < all.size(); ++i)
+        for (int i = 0; i < m_current_size; ++i)
         {
             all[i].print();
             std::cout << '\n';

@@ -222,7 +222,7 @@ int main()
 				else if(activated_shape->isNotMoving() && hasActivationBeenClicked)
 				{
 					activated_shape->status(state::BEING_MOVED);
-					activated_shape->getShape()->setFillColor(sf::Color::Green);
+					activated_shape->getShape().setFillColor(sf::Color::Green);
 				}
 				hasActivationBeenClicked = false;
 			}
